@@ -29,12 +29,58 @@ const headlineSchema = {
   },
 };
 
-export async function generateHeadlines(role: string, goals: string): Promise<HeadlineSuggestion[]> {
+export async function summarizeLinkedInProfile(url: string): Promise<string | undefined> {
   const prompt = `
+    Please visit the following LinkedIn profile URL and provide a concise summary (around 100-150 words) of the individual's current role, key skills, achievements, and implied career trajectory. Focus on information relevant for crafting a compelling LinkedIn headline.
+    URL: ${url}
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        tools: [{googleSearch: {}}],
+        temperature: 0.1, // Keep temperature low for factual summary
+      },
+    });
+
+    const summaryText = response.text.trim();
+    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+
+    // If there's no meaningful summary text OR no successful grounding results, consider it a failure.
+    // A meaningful summary should be longer than a few words and not contain phrases indicating access issues.
+    // Successful grounding chunks indicate the search tool found and processed content.
+    if (!summaryText || summaryText.length < 20 || summaryText.toLowerCase().includes("could not access") || !groundingChunks || groundingChunks.length === 0) {
+        console.warn('LinkedIn profile summarization failed: no meaningful text or no grounding chunks.', { summaryText, groundingChunks });
+        return undefined;
+    }
+    
+    return summaryText;
+
+  } catch (error) {
+    console.error('Error summarizing LinkedIn profile with Gemini API:', error);
+    // Re-throwing a more specific error for App.tsx to catch
+    throw new Error('Failed to access or summarize the LinkedIn profile. Ensure the URL is valid, the profile is public, and try again.');
+  }
+}
+
+export async function generateHeadlines(role: string, goals: string, profileSummary?: string): Promise<HeadlineSuggestion[]> {
+  let prompt = `
     As an expert career coach and LinkedIn branding specialist, generate exactly 10 optimized LinkedIn headlines for a professional with the following details:
     - Current Role/Title: "${role}"
     - Career Goals: "${goals}"
+  `;
 
+  if (profileSummary) {
+    prompt += `
+    For additional context and ideation, consider the following summary of a LinkedIn profile:
+    "${profileSummary}"
+    Please integrate insights from this summary to create even more relevant and impactful headlines.
+    `;
+  }
+
+  prompt += `
     For each headline, provide a score from 1 to 100 and a rationale. The score should be based on Clarity, Keyword Optimization, and Audience Appeal.
 
     The rationale MUST be a single string containing exactly three markdown bullet points, starting with a "*". Each bullet point must correspond to one of the scoring criteria.

@@ -22,7 +22,7 @@ const ScoreCircle: React.FC<ScoreCircleProps> = ({ score }) => {
     <div className="relative w-24 h-24 flex-shrink-0">
       <svg className="w-full h-full" viewBox="0 0 100 100">
         <circle
-          className="text-slate-200"
+          className="text-[var(--color-border)]" /* Changed to use CSS variable */
           strokeWidth="10"
           stroke="currentColor"
           fill="transparent"
@@ -60,11 +60,11 @@ const RationaleList: React.FC<{ rationale: string }> = ({ rationale }) => {
 
     if (points.length === 0) {
         // Fallback for unexpected format
-        return <p className="text-slate-600 leading-relaxed">{rationale}</p>;
+        return <p className="text-[var(--color-text-secondary)] leading-relaxed">{rationale}</p>; /* Changed to use CSS variable */
     }
 
     return (
-        <ul className="list-none space-y-2 text-slate-600">
+        <ul className="list-none space-y-2 text-[var(--color-text-secondary)]"> {/* Changed to use CSS variable */}
             {points.map((point, i) => {
                 const parts = point.split(/:(.*)/s); // Split on the first colon
                 const title = parts[0];
@@ -75,7 +75,7 @@ const RationaleList: React.FC<{ rationale: string }> = ({ rationale }) => {
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                         <span>
-                            <strong className="font-semibold text-slate-700">{title}:</strong>{description}
+                            <strong className="font-semibold text-[var(--color-text)]">{title}:</strong>{description} {/* Changed to use CSS variable */}
                         </span>
                     </li>
                 );
@@ -106,11 +106,11 @@ export const HeadlineCard: React.FC<HeadlineCardProps> = ({ suggestion, index, i
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300 ease-in-out border border-slate-100 relative">
+        <div className="bg-[var(--color-secondary-bg)] rounded-xl shadow-theme overflow-hidden transform hover:scale-105 transition-transform duration-300 ease-in-out border border-[var(--color-border)] relative"> {/* Changed to use CSS variables and custom shadow-theme */}
             <div className="absolute top-4 right-4 flex gap-2">
                 <button
                     onClick={handleCopy}
-                    className="p-2 rounded-full transition-colors duration-200 ease-in-out text-slate-400 hover:bg-slate-100"
+                    className="p-2 rounded-full transition-colors duration-200 ease-in-out text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]" /* Changed to use CSS variables */
                     aria-label="Copy headline"
                 >
                     {isCopied ? (
@@ -127,7 +127,7 @@ export const HeadlineCard: React.FC<HeadlineCardProps> = ({ suggestion, index, i
                 </button>
                  <button
                     onClick={() => onToggleFavorite(suggestion)}
-                    className={`p-2 rounded-full transition-colors duration-200 ease-in-out ${isFavorited ? 'text-yellow-400 bg-yellow-100 hover:bg-yellow-200' : 'text-slate-400 hover:bg-slate-100'}`}
+                    className={`p-2 rounded-full transition-colors duration-200 ease-in-out ${isFavorited ? 'text-yellow-400 bg-yellow-100 hover:bg-yellow-200' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'}`} /* Changed to use CSS variable */
                     aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
@@ -139,7 +139,7 @@ export const HeadlineCard: React.FC<HeadlineCardProps> = ({ suggestion, index, i
                 <ScoreCircle score={score} />
                 <div className="flex-1 pr-16">
                     <p className="text-indigo-600 font-semibold text-sm mb-2">Option {index + 1}</p>
-                    <h3 className="text-xl font-bold text-slate-900 mb-3">{headline}</h3>
+                    <h3 className="text-xl font-bold text-[var(--color-text)] mb-3">{headline}</h3> {/* Changed to use CSS variable */}
                     <RationaleList rationale={rationale} />
                 </div>
             </div>

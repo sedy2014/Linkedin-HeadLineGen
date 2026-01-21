@@ -12,6 +12,56 @@
         font-family: 'Inter', sans-serif;
       }
       @import url('https://rsms.me/inter/inter.css');
+
+      /* Light Theme (Default) */
+      .light-theme {
+        --color-primary-bg: #f8fafc; /* slate-50 */
+        --color-secondary-bg: #ffffff; /* white */
+        --color-text: #334155; /* slate-800 */
+        --color-text-secondary: #64748b; /* slate-500 */
+        --color-border: #e2e8f0; /* slate-200 */
+        --color-card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* default shadow-md */
+        --color-input-border: #cbd5e1; /* slate-300 */
+      }
+
+      /* Dark Theme */
+      .dark-theme {
+        --color-primary-bg: #111827; /* gray-900 */
+        --color-secondary-bg: #1f2937; /* gray-800 */
+        --color-text: #f9fafb; /* gray-100 */
+        --color-text-secondary: #d1d5db; /* gray-300 */
+        --color-border: #374151; /* gray-700 */
+        --color-card-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -4px rgb(0 0 0 / 0.2); /* darker shadow */
+        --color-input-border: #4b5563; /* gray-600 */
+      }
+
+      /* Gray Theme */
+      .gray-theme {
+        --color-primary-bg: #334155; /* slate-700 */
+        --color-secondary-bg: #475569; /* slate-600 */
+        --color-text: #f8fafc; /* slate-50 */
+        --color-text-secondary: #cbd5e1; /* slate-300 */
+        --color-border: #64748b; /* slate-500 */
+        --color-card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* default shadow-md */
+        --color-input-border: #94a3b8; /* slate-400 */
+      }
+
+      /* Apply base colors using variables */
+      html {
+        background-color: var(--color-primary-bg);
+        color: var(--color-text);
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      /* Override Tailwind's default body background to use our var */
+      body {
+        background-color: transparent; /* Let html handle the primary background */
+      }
+
+      /* Custom shadow for cards to match theme */
+      .shadow-theme {
+        box-shadow: var(--color-card-shadow);
+      }
     </style>
   <script type="importmap">
 {
