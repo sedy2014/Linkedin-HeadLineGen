@@ -51,37 +51,69 @@ const ScoreCircle: React.FC<ScoreCircleProps> = ({ score }) => {
   );
 };
 
+// SVG Icons for rationale points
+const RationaleIcons = {
+  clarity: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+      <path d="M7.408 2.225A1 1 0 018.36 2h3.28a1 1 0 01.953.775L14.73 8H5.27l1.46-5.775zM10 18a6 6 0 100-12 6 6 0 000 12zM9 10a1 1 0 011-1h.01a1 1 0 011 1v.01a1 1 0 01-1 1H9a1 1 0 01-1-1v-.01z" />
+    </svg>
+  ),
+  keywords: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+      <path fillRule="evenodd" d="M11.604 13.911L6.711 9.017a.75.75 0 010-1.06L11.604 3.96a.75.75 0 011.06 0L17.5 8.796a.75.75 0 010 1.06L12.664 14.96a.75.75 0 01-1.06 0zM5.5 12h2.25V9.75H5.5V12z" clipRule="evenodd" />
+    </svg>
+  ),
+  audience: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+      <path d="M1 9a1 1 0 011-1h2a1 1 0 011 1v1a1 1 0 01-1 1H2a1 1 0 01-1-1V9zM7 9a1 1 0 011-1h2a1 1 0 011 1v1a1 1 0 01-1 1H8a1 1 0 01-1-1V9zM13 9a1 1 0 011-1h2a1 1 0 011 1v1a1 1 0 01-1 1h-2a1 1 0 01-1-1V9z" />
+    </svg>
+  ),
+  default: (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+};
+
 const RationaleList: React.FC<{ rationale: string }> = ({ rationale }) => {
-    // Split by newline, filter out empty lines, and remove the leading '*'
-    const points = rationale.split('\n')
-                           .map(p => p.trim())
-                           .filter(p => p.startsWith('*'))
-                           .map(p => p.substring(1).trim());
+  const points = rationale.split('\n')
+    .map(p => p.trim())
+    .filter(p => p.startsWith('*'))
+    .map(p => p.substring(1).trim());
 
-    if (points.length === 0) {
-        // Fallback for unexpected format
-        return <p className="text-[var(--color-text-secondary)] leading-relaxed">{rationale}</p>; /* Changed to use CSS variable */
-    }
+  if (points.length === 0) {
+    return <p className="text-[var(--color-text-secondary)] leading-relaxed">{rationale}</p>;
+  }
 
-    return (
-        <ul className="list-none space-y-2 text-[var(--color-text-secondary)]"> {/* Changed to use CSS variable */}
-            {points.map((point, i) => {
-                const parts = point.split(/:(.*)/s); // Split on the first colon
-                const title = parts[0];
-                const description = parts[1] || ''; // Ensure description is not undefined
-                return (
-                    <li key={i} className="flex items-start text-sm">
-                        <svg className="w-4 h-4 mr-2 mt-0.5 text-indigo-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <span>
-                            <strong className="font-semibold text-[var(--color-text)]">{title}:</strong>{description} {/* Changed to use CSS variable */}
-                        </span>
-                    </li>
-                );
-            })}
-        </ul>
-    );
+  const getIconForTitle = (title: string) => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes('clarity')) return RationaleIcons.clarity;
+    if (lowerTitle.includes('keyword')) return RationaleIcons.keywords;
+    if (lowerTitle.includes('audience')) return RationaleIcons.audience;
+    return RationaleIcons.default;
+  };
+
+  return (
+    <ul className="list-none space-y-2 text-[var(--color-text-secondary)]">
+      {points.map((point, i) => {
+        const parts = point.split(/:(.*)/s);
+        const title = parts[0];
+        const description = parts[1] || '';
+        const IconComponent = getIconForTitle(title);
+
+        return (
+          <li key={i} className="flex items-start text-sm">
+            <span className="mr-2 mt-0.5 text-indigo-500 flex-shrink-0">
+              {IconComponent}
+            </span>
+            <span>
+              <strong className="font-semibold text-[var(--color-text)]">{title}:</strong>{description}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
 };
 
 
@@ -90,19 +122,51 @@ interface HeadlineCardProps {
   index: number;
   isFavorited: boolean;
   onToggleFavorite: (suggestion: HeadlineSuggestion) => void;
+  onEdit: (index: number, newHeadlineText: string) => void; // New prop for editing
 }
 
-export const HeadlineCard: React.FC<HeadlineCardProps> = ({ suggestion, index, isFavorited, onToggleFavorite }) => {
+export const HeadlineCard: React.FC<HeadlineCardProps> = ({ suggestion, index, isFavorited, onToggleFavorite, onEdit }) => {
     const { headline, score, rationale } = suggestion;
     const [isCopied, setIsCopied] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editedHeadlineText, setEditedHeadlineText] = useState(headline);
+    const [favoriteActionMessage, setFavoriteActionMessage] = useState<string | null>(null); // New state for favorite confirmation
 
     const handleCopy = () => {
         navigator.clipboard.writeText(headline).then(() => {
             setIsCopied(true);
+            // Clear other messages
+            setFavoriteActionMessage(null);
             setTimeout(() => setIsCopied(false), 2000);
         }).catch(err => {
             console.error('Failed to copy headline:', err);
         });
+    };
+
+    const handleEditToggle = () => {
+      if (isEditing) {
+        // If we were editing, now we save
+        if (editedHeadlineText.trim() !== headline) { // Only save if text changed
+          onEdit(index, editedHeadlineText.trim());
+        }
+        setIsEditing(false);
+      } else {
+        // Start editing
+        setEditedHeadlineText(headline); // Initialize with current headline
+        setIsEditing(true);
+        // Clear other messages when starting edit
+        setIsCopied(false);
+        setFavoriteActionMessage(null); 
+      }
+    };
+
+    const handleToggleFavoriteClick = () => {
+      const wasFavorited = isFavorited;
+      onToggleFavorite(suggestion); // This triggers App.tsx to update favorites and re-render with new `isFavorited` prop
+      setFavoriteActionMessage(wasFavorited ? 'Removed from favorites!' : 'Added to favorites!');
+      // Clear other messages
+      setIsCopied(false);
+      setTimeout(() => setFavoriteActionMessage(null), 2000);
     };
 
     return (
@@ -112,6 +176,7 @@ export const HeadlineCard: React.FC<HeadlineCardProps> = ({ suggestion, index, i
                     onClick={handleCopy}
                     className="p-2 rounded-full transition-colors duration-200 ease-in-out text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]" /* Changed to use CSS variables */
                     aria-label="Copy headline"
+                    disabled={isEditing} // Disable while editing
                 >
                     {isCopied ? (
                         <span className="flex items-center text-emerald-500">
@@ -126,26 +191,53 @@ export const HeadlineCard: React.FC<HeadlineCardProps> = ({ suggestion, index, i
                     )}
                 </button>
                  <button
-                    onClick={() => onToggleFavorite(suggestion)}
+                    onClick={handleToggleFavoriteClick} // Use the new handler
                     className={`p-2 rounded-full transition-colors duration-200 ease-in-out ${isFavorited ? 'text-yellow-400 bg-yellow-100 hover:bg-yellow-200' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'}`} /* Changed to use CSS variable */
                     aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                    disabled={isEditing} // Disable while editing
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
+                </button>
+                <button
+                    onClick={handleEditToggle}
+                    className={`p-2 rounded-full transition-colors duration-200 ease-in-out ${isEditing ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'}`}
+                    aria-label={isEditing ? 'Save edited headline' : 'Edit headline'}
+                >
+                    {isEditing ? (
+                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                    )}
                 </button>
             </div>
             <div className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-6">
                 <ScoreCircle score={score} />
                 <div className="flex-1 pr-16">
                     <p className="text-indigo-600 font-semibold text-sm mb-2">Option {index + 1}</p>
-                    <h3 className="text-xl font-bold text-[var(--color-text)] mb-3">{headline}</h3> {/* Changed to use CSS variable */}
+                    {isEditing ? (
+                        <textarea
+                            className="w-full p-2 border border-[var(--color-input-border)] rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-[var(--color-secondary-bg)] text-[var(--color-text)] mb-3 resize-none"
+                            value={editedHeadlineText}
+                            onChange={(e) => setEditedHeadlineText(e.target.value)}
+                            rows={3}
+                            maxLength={120} // LinkedIn headline max length
+                            aria-label="Edit headline"
+                        />
+                    ) : (
+                        <h3 className="text-xl font-bold text-[var(--color-text)] mb-3">{headline}</h3>
+                    )}
                     <RationaleList rationale={rationale} />
                 </div>
             </div>
-            {isCopied && (
-                <div className="absolute bottom-4 right-4 bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
-                    Copied to clipboard!
+            {(isCopied || favoriteActionMessage) && ( // Show either message
+                <div className="absolute bottom-4 right-4 bg-slate-800 text-white text-xs font-semibold px-3 py-1.5 rounded-full z-10"> {/* Added z-10 for layering */}
+                    {isCopied ? 'Copied to clipboard!' : favoriteActionMessage}
                 </div>
             )}
         </div>

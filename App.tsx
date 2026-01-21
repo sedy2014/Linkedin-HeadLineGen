@@ -66,6 +66,33 @@ const App: React.FC = () => {
     });
   }, []);
 
+  const handleEditHeadline = useCallback((index: number, newHeadlineText: string) => {
+    const originalSuggestion = suggestions[index];
+    if (!originalSuggestion) return;
+
+    // Update in suggestions
+    setSuggestions(prevSuggestions => {
+      const updatedSuggestions = [...prevSuggestions];
+      updatedSuggestions[index] = { ...originalSuggestion, headline: newHeadlineText };
+      return updatedSuggestions;
+    });
+
+    // Update in favorites if it was a favorite
+    setFavorites(prevFavorites => {
+      const updatedFavorites = prevFavorites.map(fav =>
+        fav.headline === originalSuggestion.headline // Compare against the original headline
+          ? { ...fav, headline: newHeadlineText }
+          : fav
+      );
+      // If the original headline was not in favorites but the edited one should be, this handles it
+      // For simplicity, we assume if it was a favorite, it's still treated as the same 'item'
+      // just with updated text. If it wasn't a favorite, it won't be added.
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedFavorites));
+      return updatedFavorites;
+    });
+  }, [suggestions]);
+
+
   const handleSubmit = useCallback(async (event: React.FormEvent) => {
     event.preventDefault();
     if (!role.trim() || !goals.trim()) {
@@ -177,6 +204,7 @@ const App: React.FC = () => {
                     index={index}
                     isFavorited={favorites.some(fav => fav.headline === suggestion.headline)}
                     onToggleFavorite={handleToggleFavorite}
+                    onEdit={handleEditHeadline} // Pass the new onEdit prop
                   />
                 ))}
               </div>
