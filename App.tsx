@@ -66,14 +66,18 @@ const App: React.FC = () => {
     });
   }, []);
 
-  const handleEditHeadline = useCallback((index: number, newHeadlineText: string) => {
+  const handleEditSuggestion = useCallback((index: number, newHeadlineText: string, newRationaleText: string) => {
     const originalSuggestion = suggestions[index];
     if (!originalSuggestion) return;
 
     // Update in suggestions
     setSuggestions(prevSuggestions => {
       const updatedSuggestions = [...prevSuggestions];
-      updatedSuggestions[index] = { ...originalSuggestion, headline: newHeadlineText };
+      updatedSuggestions[index] = { 
+        ...originalSuggestion, 
+        headline: newHeadlineText,
+        rationale: newRationaleText 
+      };
       return updatedSuggestions;
     });
 
@@ -81,12 +85,9 @@ const App: React.FC = () => {
     setFavorites(prevFavorites => {
       const updatedFavorites = prevFavorites.map(fav =>
         fav.headline === originalSuggestion.headline // Compare against the original headline
-          ? { ...fav, headline: newHeadlineText }
+          ? { ...fav, headline: newHeadlineText, rationale: newRationaleText }
           : fav
       );
-      // If the original headline was not in favorites but the edited one should be, this handles it
-      // For simplicity, we assume if it was a favorite, it's still treated as the same 'item'
-      // just with updated text. If it wasn't a favorite, it won't be added.
       localStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedFavorites));
       return updatedFavorites;
     });
@@ -204,7 +205,7 @@ const App: React.FC = () => {
                     index={index}
                     isFavorited={favorites.some(fav => fav.headline === suggestion.headline)}
                     onToggleFavorite={handleToggleFavorite}
-                    onEdit={handleEditHeadline} // Pass the new onEdit prop
+                    onEdit={handleEditSuggestion} // Pass the new onEdit prop
                   />
                 ))}
               </div>

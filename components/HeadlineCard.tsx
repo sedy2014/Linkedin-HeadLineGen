@@ -122,7 +122,7 @@ interface HeadlineCardProps {
   index: number;
   isFavorited: boolean;
   onToggleFavorite: (suggestion: HeadlineSuggestion) => void;
-  onEdit: (index: number, newHeadlineText: string) => void; // New prop for editing
+  onEdit: (index: number, newHeadlineText: string, newRationaleText: string) => void; // Updated prop for editing
 }
 
 export const HeadlineCard: React.FC<HeadlineCardProps> = ({ suggestion, index, isFavorited, onToggleFavorite, onEdit }) => {
@@ -130,6 +130,7 @@ export const HeadlineCard: React.FC<HeadlineCardProps> = ({ suggestion, index, i
     const [isCopied, setIsCopied] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editedHeadlineText, setEditedHeadlineText] = useState(headline);
+    const [editedRationaleText, setEditedRationaleText] = useState(rationale);
     const [favoriteActionMessage, setFavoriteActionMessage] = useState<string | null>(null); // New state for favorite confirmation
 
     const handleCopy = () => {
@@ -146,13 +147,14 @@ export const HeadlineCard: React.FC<HeadlineCardProps> = ({ suggestion, index, i
     const handleEditToggle = () => {
       if (isEditing) {
         // If we were editing, now we save
-        if (editedHeadlineText.trim() !== headline) { // Only save if text changed
-          onEdit(index, editedHeadlineText.trim());
+        if (editedHeadlineText.trim() !== headline || editedRationaleText.trim() !== rationale) { // Only save if text changed
+          onEdit(index, editedHeadlineText.trim(), editedRationaleText.trim());
         }
         setIsEditing(false);
       } else {
         // Start editing
         setEditedHeadlineText(headline); // Initialize with current headline
+        setEditedRationaleText(rationale); // Initialize with current rationale
         setIsEditing(true);
         // Clear other messages when starting edit
         setIsCopied(false);
@@ -221,18 +223,38 @@ export const HeadlineCard: React.FC<HeadlineCardProps> = ({ suggestion, index, i
                 <div className="flex-1 pr-16">
                     <p className="text-indigo-600 font-semibold text-sm mb-2">Option {index + 1}</p>
                     {isEditing ? (
-                        <textarea
-                            className="w-full p-2 border border-[var(--color-input-border)] rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-[var(--color-secondary-bg)] text-[var(--color-text)] mb-3 resize-none"
-                            value={editedHeadlineText}
-                            onChange={(e) => setEditedHeadlineText(e.target.value)}
-                            rows={3}
-                            maxLength={120} // LinkedIn headline max length
-                            aria-label="Edit headline"
-                        />
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-1">Headline</label>
+                                <textarea
+                                    className="w-full p-2 border border-[var(--color-input-border)] rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-[var(--color-secondary-bg)] text-[var(--color-text)] resize-none"
+                                    value={editedHeadlineText}
+                                    onChange={(e) => setEditedHeadlineText(e.target.value)}
+                                    rows={3}
+                                    maxLength={120} // LinkedIn headline max length
+                                    aria-label="Edit headline"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-1">Rationale</label>
+                                <textarea
+                                    className="w-full p-2 border border-[var(--color-input-border)] rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-[var(--color-secondary-bg)] text-[var(--color-text)] resize-none"
+                                    value={editedRationaleText}
+                                    onChange={(e) => setEditedRationaleText(e.target.value)}
+                                    rows={6}
+                                    aria-label="Edit rationale"
+                                />
+                                <p className="text-[10px] text-[var(--color-text-secondary)] mt-1 italic">
+                                    Tip: Use lines starting with * to create bullet points with icons.
+                                </p>
+                            </div>
+                        </div>
                     ) : (
-                        <h3 className="text-xl font-bold text-[var(--color-text)] mb-3">{headline}</h3>
+                        <>
+                            <h3 className="text-xl font-bold text-[var(--color-text)] mb-3">{headline}</h3>
+                            <RationaleList rationale={rationale} />
+                        </>
                     )}
-                    <RationaleList rationale={rationale} />
                 </div>
             </div>
             {(isCopied || favoriteActionMessage) && ( // Show either message
