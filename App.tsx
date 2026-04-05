@@ -8,6 +8,7 @@ import { InputForm } from './components/InputForm';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { FavoritesSection } from './components/FavoritesSection';
 import { ThemeSwitcher } from './components/ThemeSwitcher';
+import mammoth from 'mammoth';
 
 const FAVORITES_KEY = 'linkedin-headline-favorites';
 const THEME_KEY = 'linkedin-headline-theme';
@@ -17,6 +18,7 @@ const App: React.FC = () => {
   const [goals, setGoals] = useState('');
   const [linkedInProfileUrl, setLinkedInProfileUrl] = useState('');
   const [useProfileForIdeation, setUseProfileForIdeation] = useState(false);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [suggestions, setSuggestions] = useState<HeadlineSuggestion[]>([]);
   const [favorites, setFavorites] = useState<HeadlineSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -96,8 +98,8 @@ const App: React.FC = () => {
 
   const handleSubmit = useCallback(async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!role.trim() || !goals.trim()) {
-      setError('Please fill out both your current role and career goals.');
+    if (!role.trim() && !linkedInProfileUrl.trim() && !resumeFile) {
+      setError('Please provide at least a role, a LinkedIn profile, or a resume.');
       return;
     }
 
@@ -107,31 +109,54 @@ const App: React.FC = () => {
     setSuggestions([]);
 
     let profileSummary: string | undefined;
+    let resumeText: string | undefined;
+    let synthesizedRole = role.trim();
 
-    if (useProfileForIdeation && linkedInProfileUrl.trim()) {
-      setLoadingMessage('Fetching and summarizing LinkedIn profile...');
+    // 1. Extract Resume Text if available
+    if (resumeFile) {
+      setLoadingMessage('Extracting information from your resume...');
       try {
-        profileSummary = await summarizeLinkedInProfile(linkedInProfileUrl.trim());
-        if (!profileSummary) {
-          setError('Could not summarize the LinkedIn profile. Please ensure it\'s a public profile and the URL is correct.');
-          setIsLoading(false);
-          setLoadingMessage(null); // Clear loading message on error
-          return;
-        }
+        const arrayBuffer = await resumeFile.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        resumeText = result.value;
       } catch (err) {
-        setError(
-          'Failed to summarize LinkedIn profile. Please check the URL or try again later.'
-        );
-        console.error(err);
+        console.error('Error extracting text from resume:', err);
+        setError('Failed to extract text from the resume. Please ensure it\'s a valid .docx file.');
         setIsLoading(false);
-        setLoadingMessage(null); // Clear loading message on error
+        setLoadingMessage(null);
         return;
       }
     }
 
+    // 2. Fetch LinkedIn Profile Summary if requested
+    if (useProfileForIdeation && linkedInProfileUrl.trim()) {
+      setLoadingMessage('Fetching and summarizing LinkedIn profile...');
+      try {
+        profileSummary = await summarizeLinkedInProfile(linkedInProfileUrl.trim());
+        if (profileSummary) {
+          // Try to extract role from profile summary
+          const roleMatch = profileSummary.match(/current role is ([^,.]+)/i) || profileSummary.match(/works as a ([^,.]+)/i);
+          if (roleMatch) {
+            synthesizedRole = roleMatch[1].trim(); // Prioritize LinkedIn info as requested
+          }
+        }
+      } catch (err) {
+        console.error('LinkedIn summary error:', err);
+        // We can continue if we have other info
+      }
+    }
+
+    // Final check: if we still don't have a role and no resume/goals, it might be too vague
+    if (!synthesizedRole && !resumeText && !goals.trim()) {
+      setError('Insufficient information to generate headlines. Please provide more details.');
+      setIsLoading(false);
+      setLoadingMessage(null);
+      return;
+    }
+
     setLoadingMessage('Generating headline suggestions...');
     try {
-      const results = await generateHeadlines(role, goals, profileSummary);
+      const results = await generateHeadlines(synthesizedRole || 'Professional', goals, profileSummary, resumeText);
       setSuggestions(results);
     } catch (err) {
       setError(
@@ -142,13 +167,14 @@ const App: React.FC = () => {
       setIsLoading(false);
       setLoadingMessage(null);
     }
-  }, [role, goals, linkedInProfileUrl, useProfileForIdeation]);
+  }, [role, goals, linkedInProfileUrl, useProfileForIdeation, resumeFile]);
   
   const handleClear = useCallback(() => {
     setRole('');
     setGoals('');
     setLinkedInProfileUrl('');
     setUseProfileForIdeation(false);
+    setResumeFile(null);
     setSuggestions([]);
     setError(null);
     setIsLoading(false);
@@ -173,6 +199,8 @@ const App: React.FC = () => {
             setLinkedInProfileUrl={setLinkedInProfileUrl}
             useProfileForIdeation={useProfileForIdeation}
             setUseProfileForIdeation={setUseProfileForIdeation}
+            resumeFile={resumeFile}
+            setResumeFile={setResumeFile}
             isLoading={isLoading} 
             onSubmit={handleSubmit}
             onClear={handleClear}

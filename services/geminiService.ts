@@ -65,9 +65,12 @@ export async function summarizeLinkedInProfile(url: string): Promise<string | un
   }
 }
 
-export async function generateHeadlines(role: string, goals: string, profileSummary?: string): Promise<HeadlineSuggestion[]> {
+export async function generateHeadlines(role: string, goals: string, profileSummary?: string, resumeText?: string): Promise<HeadlineSuggestion[]> {
   let prompt = `
-    As an expert career coach and LinkedIn branding specialist, generate exactly 10 optimized LinkedIn headlines for a professional with the following details:
+    As an expert career coach and LinkedIn branding specialist, generate exactly 10 optimized LinkedIn headlines for a professional.
+    The goal is to improve their current professional identity while strategically incorporating their target career path and goals.
+    
+    Details:
     - Current Role/Title: "${role}"
     - Career Goals: "${goals}"
   `;
@@ -77,6 +80,14 @@ export async function generateHeadlines(role: string, goals: string, profileSumm
     For additional context and ideation, consider the following summary of a LinkedIn profile:
     "${profileSummary}"
     Please integrate insights from this summary to create even more relevant and impactful headlines.
+    `;
+  }
+
+  if (resumeText) {
+    prompt += `
+    For additional context, consider the following information extracted from the user's resume:
+    "${resumeText}"
+    Use this information to better understand the user's experience, skills, and achievements to suggest more tailored and effective headlines.
     `;
   }
 

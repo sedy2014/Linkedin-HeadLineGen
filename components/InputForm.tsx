@@ -10,6 +10,8 @@ interface InputFormProps {
     setLinkedInProfileUrl: (value: string) => void;
     useProfileForIdeation: boolean;
     setUseProfileForIdeation: (value: boolean) => void;
+    resumeFile: File | null;
+    setResumeFile: (file: File | null) => void;
     isLoading: boolean;
     onSubmit: (event: React.FormEvent) => void;
     onClear: () => void;
@@ -25,11 +27,18 @@ export const InputForm: React.FC<InputFormProps> = ({
     setLinkedInProfileUrl,
     useProfileForIdeation,
     setUseProfileForIdeation,
+    resumeFile,
+    setResumeFile,
     isLoading, 
     onSubmit, 
     onClear, 
     hasSuggestions 
 }) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setResumeFile(e.target.files[0]);
+        }
+    };
     return (
         <form onSubmit={onSubmit} className="bg-[var(--color-secondary-bg)] p-6 md:p-8 rounded-xl shadow-theme border border-[var(--color-border)]"> {/* Changed to use CSS variables and custom shadow-theme */}
             <div className="space-y-6">
@@ -48,7 +57,7 @@ export const InputForm: React.FC<InputFormProps> = ({
                         aria-describedby="role-help"
                     />
                     <p id="role-help" className="mt-1 text-sm text-[var(--color-text-secondary)]"> {/* Changed to use CSS variable */}
-                        Provide your current or target job title and company.
+                        Provide your current job title and company.
                     </p>
                 </div>
                 <div>
@@ -100,12 +109,46 @@ export const InputForm: React.FC<InputFormProps> = ({
                         </label>
                     </div>
                 </div>
+                <div className="border-t border-[var(--color-border)] pt-6">
+                    <label htmlFor="resume-upload" className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                        Upload Resume (Word .docx format)
+                    </label>
+                    <div className="flex items-center gap-4">
+                        <input
+                            id="resume-upload"
+                            type="file"
+                            accept=".docx"
+                            onChange={handleFileChange}
+                            className="block w-full text-sm text-[var(--color-text-secondary)]
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-full file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-indigo-50 file:text-indigo-700
+                                hover:file:bg-indigo-100
+                                bg-[var(--color-secondary-bg)] border border-[var(--color-input-border)] rounded-lg p-1"
+                            disabled={isLoading}
+                        />
+                        {resumeFile && (
+                            <button
+                                type="button"
+                                onClick={() => setResumeFile(null)}
+                                className="text-rose-500 hover:text-rose-700 text-sm font-medium"
+                                disabled={isLoading}
+                            >
+                                Remove
+                            </button>
+                        )}
+                    </div>
+                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                        Upload your resume to help the AI understand your background and achievements better.
+                    </p>
+                </div>
             </div>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <button
                     type="submit"
                     className="w-full sm:w-auto flex-grow inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300 disabled:cursor-not-allowed transition-colors"
-                    disabled={isLoading || !role || !goals}
+                    disabled={isLoading || (!role.trim() && !linkedInProfileUrl.trim() && !resumeFile)}
                 >
                     {isLoading ? 'Generating...' : 'Generate Headlines'}
                 </button>
